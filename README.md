@@ -60,6 +60,8 @@ python src/serve_frontend.py
 
 Then open `http://127.0.0.1:8000`.
 
+The frontend is built with HTML, CSS, and React. It is served from the `frontend/` folder and calls the Python API in `src/serve_frontend.py`.
+
 The trained model is saved to `models/calorie_predictor.joblib`.
 
 The preprocessing step creates a cleaned dataset at `data/processed/hourly_health_features.csv`.

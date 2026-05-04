@@ -28,20 +28,23 @@ def main() -> None:
 
     saved = joblib.load(MODEL_PATH)
     model = saved["model"]
+    features = saved["features"]
+    feature_defaults = saved.get("feature_defaults", {})
 
-    row = pd.DataFrame(
-        [
-            {
-                "Id": args.id,
-                "StepTotal": args.steps,
-                "TotalIntensity": args.total_intensity,
-                "AverageIntensity": args.average_intensity,
-                "Hour": args.hour,
-                "DayOfWeek": args.day_of_week,
-                "IsWeekend": int(args.day_of_week in [5, 6]),
-            }
-        ]
+    row_values = {feature: feature_defaults.get(feature, 0) for feature in features}
+    row_values.update(
+        {
+            "Id": args.id,
+            "StepTotal": args.steps,
+            "TotalIntensity": args.total_intensity,
+            "AverageIntensity": args.average_intensity,
+            "Hour": args.hour,
+            "DayOfWeek": args.day_of_week,
+            "IsWeekend": int(args.day_of_week in [5, 6]),
+        }
     )
+
+    row = pd.DataFrame([row_values], columns=features)
 
     predicted_calories = model.predict(row)[0]
     print(f"Predicted calories burned: {predicted_calories:.1f}")

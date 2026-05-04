@@ -1,16 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #f4f7f6;
+  --bg: #f8f0ff;
   --panel: #ffffff;
-  --ink: #1f2933;
-  --muted: #637083;
-  --line: #d9e1df;
-  --teal: #147c72;
-  --teal-dark: #0e625b;
-  --coral: #c85e4d;
-  --gold: #bb8a25;
-  --blue: #315c91;
-  --shadow: 0 18px 42px rgba(31, 41, 51, 0.09);
+  --ink: #251a36;
+  --muted: #746381;
+  --line: #eadcf8;
+  --teal: #8b5cf6;
+  --teal-dark: #7c3aed;
+  --coral: #ec4899;
+  --gold: #f472b6;
+  --blue: #6d28d9;
+  --shadow: 0 18px 42px rgba(92, 42, 150, 0.14);
 }
 
 * {
@@ -23,7 +23,11 @@ body {
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(236, 72, 153, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(139, 92, 246, 0.22), transparent 32%),
+    linear-gradient(135deg, #fff7fb 0%, #f3e8ff 48%, #ffe4f1 100%);
+  background-attachment: fixed;
 }
 
 button,
@@ -45,13 +49,15 @@ p {
   justify-content: space-between;
   gap: 24px;
   padding: 24px clamp(16px, 4vw, 48px) 16px;
-  border-bottom: 1px solid var(--line);
-  background: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+  background: linear-gradient(135deg, #6d28d9 0%, #a855f7 46%, #ec4899 100%);
+  box-shadow: 0 18px 40px rgba(109, 40, 217, 0.18);
 }
 
 .eyebrow {
   margin-bottom: 5px;
-  color: var(--teal);
+  color: #ffe4f1;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -80,23 +86,23 @@ h3 {
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: var(--muted);
-  background: #f9faf8;
+  color: #6b4a7a;
+  background: #fff8fc;
   font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
 }
 
 .model-status.ready {
-  color: var(--teal-dark);
-  border-color: rgba(20, 124, 114, 0.28);
-  background: rgba(20, 124, 114, 0.08);
+  color: #5b21b6;
+  border-color: rgba(139, 92, 246, 0.34);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .model-status.error {
-  color: var(--coral);
-  border-color: rgba(200, 94, 77, 0.3);
-  background: rgba(200, 94, 77, 0.08);
+  color: #fff7fb;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(236, 72, 153, 0.22);
 }
 
 .app-shell {
@@ -111,7 +117,7 @@ h3 {
 .panel {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow);
   padding: 18px;
 }
@@ -204,19 +210,19 @@ select {
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
-  background: #ffffff;
+  background: #fffafd;
   outline: none;
 }
 
 input[type="range"] {
   padding: 0;
-  accent-color: var(--teal);
+  accent-color: var(--coral);
 }
 
 input:focus,
 select:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(20, 124, 114, 0.14);
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.16);
 }
 
 .primary-button,
@@ -230,11 +236,12 @@ select:focus {
 
 .primary-button {
   color: #ffffff;
-  background: var(--teal);
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  box-shadow: 0 10px 22px rgba(236, 72, 153, 0.22);
 }
 
 .primary-button:hover {
-  background: var(--teal-dark);
+  background: linear-gradient(135deg, #6d28d9 0%, #db2777 100%);
 }
 
 .primary-button:disabled,
@@ -246,8 +253,8 @@ select:focus {
 .ghost-button {
   padding: 0 14px;
   color: var(--blue);
-  border-color: var(--line);
-  background: #ffffff;
+  border-color: rgba(139, 92, 246, 0.28);
+  background: #fff8fc;
 }
 
 .score-panel {
@@ -278,7 +285,7 @@ select:focus {
   inset: 10px;
   content: "";
   border-radius: 50%;
-  background: #ffffff;
+  background: #fffafd;
 }
 
 .score-ring strong,
@@ -312,7 +319,7 @@ select:focus {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfa;
+  background: linear-gradient(180deg, #fffafd 0%, #fbf5ff 100%);
 }
 
 .stat-card span {
@@ -352,13 +359,13 @@ select:focus {
   margin-top: 8px;
   overflow: hidden;
   border-radius: 8px;
-  background: #e8eeee;
+  background: #efe3fb;
 }
 
 .bar-fill {
   height: 100%;
   border-radius: 8px;
-  background: var(--teal);
+  background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%);
 }
 
 .chart-box {
@@ -371,25 +378,25 @@ select:focus {
   min-height: 180px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfa;
+  background: #fffafd;
 }
 
 .chart-grid {
   fill: none;
-  stroke: #dce4e1;
+  stroke: #eadcf8;
   stroke-width: 2;
 }
 
 .chart-line {
   fill: none;
-  stroke: var(--teal);
+  stroke: #8b5cf6;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 4;
 }
 
 .chart-dot {
-  fill: var(--gold);
+  fill: var(--coral);
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -415,8 +422,8 @@ select:focus {
   min-height: 32px;
   padding: 8px 10px;
   border-radius: 8px;
-  color: #663328;
-  background: rgba(200, 94, 77, 0.1);
+  color: #831843;
+  background: rgba(236, 72, 153, 0.12);
   font-size: 13px;
   font-weight: 800;
 }
@@ -448,7 +455,7 @@ select:focus {
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
-  background: #fbfcfa;
+  background: #fffafd;
   text-align: left;
 }
 
@@ -457,8 +464,8 @@ select:focus {
 }
 
 .list-button.enabled {
-  border-color: rgba(20, 124, 114, 0.3);
-  background: rgba(20, 124, 114, 0.06);
+  border-color: rgba(139, 92, 246, 0.34);
+  background: rgba(139, 92, 246, 0.08);
 }
 
 .compact-list span,
@@ -504,7 +511,7 @@ th {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #f9fbfa;
+  background: #fff8fc;
 }
 
 .chat-message {
@@ -518,7 +525,7 @@ th {
 
 .chat-message.assistant {
   justify-self: start;
-  color: #263340;
+  color: #352046;
   background: #ffffff;
   border: 1px solid var(--line);
 }
@@ -526,7 +533,7 @@ th {
 .chat-message.user {
   justify-self: end;
   color: #ffffff;
-  background: var(--teal);
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
 }
 
 .chat-form {

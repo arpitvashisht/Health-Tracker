@@ -294,7 +294,9 @@ function App() {
 
   const score = latestLog?.health_score || 0;
   const scoreStyle = useMemo(
-    () => ({ background: `conic-gradient(#147c72 ${score * 3.6}deg, #e5ebe8 0deg)` }),
+    () => ({
+      background: `conic-gradient(from 180deg, #8b5cf6 0deg, #ec4899 ${score * 3.6}deg, #eadcf8 ${score * 3.6}deg, #eadcf8 360deg)`,
+    }),
     [score]
   );
 

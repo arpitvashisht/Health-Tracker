@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
+from preprocess_health_data import preprocess_hourly_health_data
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "models"
@@ -16,19 +18,7 @@ MODEL_PATH = MODEL_DIR / "calorie_predictor.joblib"
 
 
 def load_training_data() -> pd.DataFrame:
-    calories = pd.read_csv(ROOT / "hourlyCalories_merged.csv")
-    steps = pd.read_csv(ROOT / "hourlySteps_merged.csv")
-    intensities = pd.read_csv(ROOT / "hourlyIntensities_merged.csv")
-
-    data = calories.merge(steps, on=["Id", "ActivityHour"])
-    data = data.merge(intensities, on=["Id", "ActivityHour"])
-
-    data["ActivityHour"] = pd.to_datetime(data["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
-    data["Hour"] = data["ActivityHour"].dt.hour
-    data["DayOfWeek"] = data["ActivityHour"].dt.dayofweek
-    data["IsWeekend"] = data["DayOfWeek"].isin([5, 6]).astype(int)
-
-    return data
+    return preprocess_hourly_health_data(save=True)
 
 
 def build_model() -> Pipeline:

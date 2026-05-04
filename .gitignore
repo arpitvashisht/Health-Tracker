@@ -3,6 +3,8 @@ __pycache__/
 .venv/
 venv/
 models/
+data/*.db
+data/*.db-*
 data/processed/
 frontend-server.*
 .pytest_cache/

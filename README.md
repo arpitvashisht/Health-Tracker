@@ -10,6 +10,22 @@ The app lets users enter:
 
 It calculates a health score, detects unhealthy habits, generates personalized suggestions, and shows the results in a clean React UI.
 
+## Application features
+
+- user profiles for multiple people
+- personal goals for steps, sleep, water, and calories
+- daily logs for steps, sleep, water, mood, stress, energy, and notes
+- health score calculation from daily health data
+- unhealthy habit detection from current and recent logs
+- progress charts for the last seven days
+- streaks for steps, sleep, hydration, and strong health scores
+- meal and calorie logging
+- reminders for healthy habits
+- chatbot memory using saved chat history and daily logs
+- weekly AI report with a local fallback when no API key is set
+
+The backend uses SQLite and stores local app data in `data/health_tracker.db`.
+
 ## Dataset files
 
 This repo currently includes hourly and minute-level health tracking CSV files, including:

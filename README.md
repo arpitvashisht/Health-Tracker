@@ -52,6 +52,14 @@ Run a prediction:
 python src/predict_calories.py --id 1503960366 --steps 500 --total-intensity 20 --average-intensity 0.33 --hour 18 --day-of-week 2
 ```
 
+Run the frontend:
+
+```bash
+python src/serve_frontend.py
+```
+
+Then open `http://127.0.0.1:8000`.
+
 The trained model is saved to `models/calorie_predictor.joblib`.
 
 The preprocessing step creates a cleaned dataset at `data/processed/hourly_health_features.csv`.

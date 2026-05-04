@@ -4,4 +4,5 @@ __pycache__/
 venv/
 models/
 data/processed/
+frontend-server.*
 .pytest_cache/

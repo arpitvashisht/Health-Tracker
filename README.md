@@ -10,6 +10,8 @@ The app lets users enter:
 
 It calculates a health score, detects unhealthy habits, generates personalized suggestions, and shows the results in a clean React UI.
 
+Full project documentation is available in [`PROJECT_REPORT.md`](PROJECT_REPORT.md).
+
 ## Application features
 
 - user profiles for multiple people

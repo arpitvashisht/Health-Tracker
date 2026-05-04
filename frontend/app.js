@@ -1,141 +1,154 @@
 const { useEffect, useMemo, useState } = React;
 
 const initialForm = {
-  id: "1503960366",
-  steps: "500",
-  totalIntensity: "20",
-  averageIntensity: "0.33",
-  hour: "18",
-  dayOfWeek: "2",
-  heartRateMean: "",
-  sleepMinutes: "",
-  weightKg: "",
-  bmi: "",
+  steps: "6500",
+  sleepHours: "6.5",
+  waterLiters: "1.8",
 };
 
-const days = [
-  ["0", "Monday"],
-  ["1", "Tuesday"],
-  ["2", "Wednesday"],
-  ["3", "Thursday"],
-  ["4", "Friday"],
-  ["5", "Saturday"],
-  ["6", "Sunday"],
+const starterMessages = [
+  {
+    role: "assistant",
+    text: "Hi, I am your AI health assistant. Enter today's steps, sleep, and water intake, then I will calculate your score and suggest a realistic next move.",
+  },
 ];
 
-const datasets = [
-  "Hourly calories",
-  "Hourly steps",
-  "Hourly intensity",
-  "Minute steps",
-  "Minute intensity",
-  "METs",
-  "Sleep",
-  "Heart rate",
-  "Weight",
-];
-
-function numberOrNull(value) {
-  return value === "" ? null : Number(value);
+function toNumber(value) {
+  return Number(value || 0);
 }
 
-function Field({ label, children }) {
-  return React.createElement("label", null, label, children);
+function scoreLabel(score) {
+  if (score >= 85) return "Excellent";
+  if (score >= 70) return "Good";
+  if (score >= 50) return "Needs attention";
+  return "Needs care";
 }
 
-function TextInput(props) {
-  return React.createElement("input", {
-    ...props,
-    onChange: (event) => props.onChange(props.name, event.target.value),
-  });
+function Field({ label, hint, children }) {
+  return React.createElement(
+    "label",
+    null,
+    React.createElement("span", null, label),
+    children,
+    hint ? React.createElement("small", null, hint) : null
+  );
 }
 
 function App() {
   const [form, setForm] = useState(initialForm);
-  const [modelStatus, setModelStatus] = useState({ label: "Checking model", state: "" });
-  const [runState, setRunState] = useState("Ready");
-  const [predictedCalories, setPredictedCalories] = useState(null);
-  const [featureCount, setFeatureCount] = useState(40);
+  const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages] = useState(starterMessages);
+  const [analysis, setAnalysis] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [status, setStatus] = useState({ aiReady: false, modelReady: false });
   const [isLoading, setIsLoading] = useState(false);
 
-  const hours = useMemo(
-    () => Array.from({ length: 24 }, (_, hour) => [String(hour), `${String(hour).padStart(2, "0")}:00`]),
-    []
-  );
-
   useEffect(() => {
-    async function refreshModelStatus() {
+    async function loadStatus() {
       try {
         const response = await fetch("/api/status");
-        const status = await response.json();
-
-        if (!response.ok || !status.modelReady) {
-          throw new Error(status.error || "Model not ready");
-        }
-
-        setModelStatus({ label: "Model ready", state: "ready" });
-        setFeatureCount(status.featureCount);
+        const data = await response.json();
+        setStatus(data);
       } catch (error) {
-        setModelStatus({ label: "Train model first", state: "error" });
+        setStatus({ aiReady: false, modelReady: false });
       }
     }
 
-    refreshModelStatus();
+    loadStatus();
   }, []);
+
+  const score = analysis?.healthScore ?? 0;
+  const scoreStyle = useMemo(
+    () => ({
+      background: `conic-gradient(#147c72 ${score * 3.6}deg, #e5ebe8 0deg)`,
+    }),
+    [score]
+  );
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  function resetForm() {
-    setForm(initialForm);
-    setPredictedCalories(null);
-    setRunState("Ready");
-  }
-
-  function predictionPayload() {
+  function payload(extraMessage = "") {
     return {
-      id: Number(form.id),
-      steps: Number(form.steps),
-      totalIntensity: Number(form.totalIntensity),
-      averageIntensity: Number(form.averageIntensity),
-      hour: Number(form.hour),
-      dayOfWeek: Number(form.dayOfWeek),
-      heartRateMean: numberOrNull(form.heartRateMean),
-      sleepMinutes: numberOrNull(form.sleepMinutes),
-      weightKg: numberOrNull(form.weightKg),
-      bmi: numberOrNull(form.bmi),
+      steps: toNumber(form.steps),
+      sleepHours: toNumber(form.sleepHours),
+      waterLiters: toNumber(form.waterLiters),
+      message: extraMessage,
+      history: history.slice(-6),
     };
   }
 
-  async function predict(event) {
-    event.preventDefault();
+  async function callHealthAssistant(extraMessage = "") {
     setIsLoading(true);
-    setRunState("Running");
+
+    const userMessage = extraMessage || "Analyze my daily health data.";
+    setMessages((current) => [...current, { role: "user", text: userMessage }]);
 
     try {
-      const response = await fetch("/api/predict", {
+      const response = await fetch("/api/health-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(predictionPayload()),
+        body: JSON.stringify(payload(extraMessage)),
       });
-      const result = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Prediction failed");
+        throw new Error(data.error || "Health assistant failed");
       }
 
-      setPredictedCalories(Number(result.predictedCalories));
-      setRunState("Complete");
+      setAnalysis(data);
+      setHistory((current) =>
+        [
+          ...current,
+          {
+            steps: data.inputs.steps,
+            sleepHours: data.inputs.sleepHours,
+            waterLiters: data.inputs.waterLiters,
+            healthScore: data.healthScore,
+          },
+        ].slice(-7)
+      );
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: data.reply,
+        },
+      ]);
     } catch (error) {
-      setPredictedCalories(null);
-      setRunState(error.message);
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: error.message,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
   }
 
-  const meterWidth = predictedCalories === null ? 0 : Math.min(100, Math.max(4, (predictedCalories / 180) * 100));
+  function submitDailyData(event) {
+    event.preventDefault();
+    callHealthAssistant();
+  }
+
+  function sendChat(event) {
+    event.preventDefault();
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+    setChatInput("");
+    callHealthAssistant(trimmed);
+  }
+
+  function resetApp() {
+    setForm(initialForm);
+    setChatInput("");
+    setMessages(starterMessages);
+    setAnalysis(null);
+    setHistory([]);
+  }
 
   return React.createElement(
     React.Fragment,
@@ -146,172 +159,95 @@ function App() {
       React.createElement(
         "div",
         null,
-        React.createElement("p", { className: "eyebrow" }, "Health Tracker AI"),
-        React.createElement("h1", null, "Calorie Prediction Dashboard")
+        React.createElement("p", { className: "eyebrow" }, "Generative AI Health Assistant"),
+        React.createElement("h1", null, "AI Smart Health Tracker Chatbot using Generative AI")
       ),
-      React.createElement("div", { className: `model-status ${modelStatus.state}` }, modelStatus.label)
+      React.createElement(
+        "div",
+        { className: `model-status ${status.aiReady ? "ready" : "error"}` },
+        status.aiReady ? "OpenAI connected" : "Local AI fallback"
+      )
     ),
     React.createElement(
       "main",
-      { className: "app-shell" },
+      { className: "app-shell health-app-shell" },
       React.createElement(
         "section",
         { className: "panel input-panel" },
         React.createElement(
           "div",
           { className: "panel-heading" },
-          React.createElement("h2", null, "Prediction Inputs"),
-          React.createElement("button", { className: "ghost-button", type: "button", onClick: resetForm }, "Reset")
+          React.createElement("h2", null, "Daily Health Data"),
+          React.createElement("button", { className: "ghost-button", type: "button", onClick: resetApp }, "Reset")
         ),
         React.createElement(
           "form",
-          { className: "form-grid", onSubmit: predict },
+          { className: "form-grid daily-form", onSubmit: submitDailyData },
           React.createElement(
             Field,
-            { label: "User ID" },
-            React.createElement(TextInput, {
-              name: "id",
-              type: "number",
-              value: form.id,
-              required: true,
-              onChange: updateField,
-            })
-          ),
-          React.createElement(
-            Field,
-            { label: "Steps" },
-            React.createElement(TextInput, {
+            { label: "Steps walked", hint: "Daily target: 8,000-10,000 steps" },
+            React.createElement("input", {
               name: "steps",
               type: "number",
               min: "0",
               value: form.steps,
               required: true,
-              onChange: updateField,
+              onChange: (event) => updateField("steps", event.target.value),
             })
           ),
           React.createElement(
             Field,
-            { label: "Total intensity" },
-            React.createElement(TextInput, {
-              name: "totalIntensity",
+            { label: "Sleep hours", hint: "Healthy range: 7-9 hours" },
+            React.createElement("input", {
+              name: "sleepHours",
               type: "number",
               min: "0",
-              value: form.totalIntensity,
+              max: "24",
+              step: "0.1",
+              value: form.sleepHours,
               required: true,
-              onChange: updateField,
+              onChange: (event) => updateField("sleepHours", event.target.value),
             })
           ),
           React.createElement(
             Field,
-            { label: "Average intensity" },
-            React.createElement(TextInput, {
-              name: "averageIntensity",
+            { label: "Water intake", hint: "Measured in liters" },
+            React.createElement("input", {
+              name: "waterLiters",
               type: "number",
               min: "0",
-              step: "0.01",
-              value: form.averageIntensity,
+              step: "0.1",
+              value: form.waterLiters,
               required: true,
-              onChange: updateField,
+              onChange: (event) => updateField("waterLiters", event.target.value),
             })
-          ),
-          React.createElement(
-            Field,
-            { label: "Hour" },
-            React.createElement(
-              "select",
-              {
-                name: "hour",
-                value: form.hour,
-                required: true,
-                onChange: (event) => updateField("hour", event.target.value),
-              },
-              hours.map(([value, label]) => React.createElement("option", { key: value, value }, label))
-            )
-          ),
-          React.createElement(
-            Field,
-            { label: "Day" },
-            React.createElement(
-              "select",
-              {
-                name: "dayOfWeek",
-                value: form.dayOfWeek,
-                required: true,
-                onChange: (event) => updateField("dayOfWeek", event.target.value),
-              },
-              days.map(([value, label]) => React.createElement("option", { key: value, value }, label))
-            )
-          ),
-          React.createElement(
-            "div",
-            { className: "field-group" },
-            React.createElement("h3", null, "Heart"),
-            React.createElement(
-              Field,
-              { label: "Avg bpm" },
-              React.createElement(TextInput, {
-                name: "heartRateMean",
-                type: "number",
-                min: "0",
-                value: form.heartRateMean,
-                placeholder: "optional",
-                onChange: updateField,
-              })
-            )
-          ),
-          React.createElement(
-            "div",
-            { className: "field-group" },
-            React.createElement("h3", null, "Sleep"),
-            React.createElement(
-              Field,
-              { label: "Sleep minutes" },
-              React.createElement(TextInput, {
-                name: "sleepMinutes",
-                type: "number",
-                min: "0",
-                max: "60",
-                value: form.sleepMinutes,
-                placeholder: "optional",
-                onChange: updateField,
-              })
-            )
-          ),
-          React.createElement(
-            "div",
-            { className: "field-group" },
-            React.createElement("h3", null, "Body"),
-            React.createElement(
-              Field,
-              { label: "Weight kg" },
-              React.createElement(TextInput, {
-                name: "weightKg",
-                type: "number",
-                min: "0",
-                step: "0.1",
-                value: form.weightKg,
-                placeholder: "optional",
-                onChange: updateField,
-              })
-            ),
-            React.createElement(
-              Field,
-              { label: "BMI" },
-              React.createElement(TextInput, {
-                name: "bmi",
-                type: "number",
-                min: "0",
-                step: "0.1",
-                value: form.bmi,
-                placeholder: "optional",
-                onChange: updateField,
-              })
-            )
           ),
           React.createElement(
             "button",
             { className: "primary-button", type: "submit", disabled: isLoading },
-            isLoading ? "Predicting" : "Predict Calories"
+            isLoading ? "Analyzing" : "Analyze My Health"
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "score-card" },
+          React.createElement(
+            "div",
+            { className: "score-ring", style: scoreStyle },
+            React.createElement("strong", null, analysis ? score : "--"),
+            React.createElement("span", null, "/100")
+          ),
+          React.createElement(
+            "div",
+            null,
+            React.createElement("h3", null, analysis ? scoreLabel(score) : "Waiting for data"),
+            React.createElement(
+              "p",
+              null,
+              analysis
+                ? "Your score combines movement, recovery, and hydration into one simple daily signal."
+                : "Submit your daily data to calculate a health score."
+            )
           )
         )
       ),
@@ -321,32 +257,70 @@ function App() {
         React.createElement(
           "div",
           { className: "panel-heading" },
-          React.createElement("h2", null, "Prediction"),
-          React.createElement("span", { className: "run-state" }, runState)
+          React.createElement("h2", null, "Health Insights"),
+          React.createElement("span", { className: "run-state" }, analysis?.aiPowered ? "OpenAI" : "Rule based")
         ),
         React.createElement(
           "div",
-          { className: "calorie-readout" },
-          React.createElement("span", null, predictedCalories === null ? "--" : predictedCalories.toFixed(1)),
-          React.createElement("small", null, "calories")
+          { className: "metric-grid health-metrics" },
+          React.createElement("div", null, React.createElement("span", null, "Steps"), React.createElement("strong", null, form.steps || "0")),
+          React.createElement("div", null, React.createElement("span", null, "Sleep"), React.createElement("strong", null, `${form.sleepHours || 0}h`)),
+          React.createElement("div", null, React.createElement("span", null, "Water"), React.createElement("strong", null, `${form.waterLiters || 0}L`))
         ),
         React.createElement(
           "div",
-          { className: "meter", "aria-hidden": "true" },
-          React.createElement("div", { className: "meter-fill", style: { width: `${meterWidth}%` } })
+          { className: "insight-block" },
+          React.createElement("h3", null, "Unhealthy Habits Detected"),
+          React.createElement(
+            "div",
+            { className: "habit-list" },
+            (analysis?.habits?.length ? analysis.habits : ["No analysis yet"]).map((habit) =>
+              React.createElement("span", { key: habit }, habit)
+            )
+          )
         ),
         React.createElement(
           "div",
-          { className: "metric-grid" },
-          React.createElement("div", null, React.createElement("span", null, "Model features"), React.createElement("strong", null, featureCount)),
-          React.createElement("div", null, React.createElement("span", null, "Rows trained"), React.createElement("strong", null, "24,084")),
-          React.createElement("div", null, React.createElement("span", null, "MAE"), React.createElement("strong", null, "0.76")),
-          React.createElement("div", null, React.createElement("span", null, "R2"), React.createElement("strong", null, "0.994"))
+          { className: "insight-block" },
+          React.createElement("h3", null, "Personalized Suggestions"),
+          React.createElement(
+            "ul",
+            { className: "suggestion-list" },
+            (analysis?.suggestions?.length ? analysis.suggestions : ["Suggestions will appear after analysis."]).map((suggestion) =>
+              React.createElement("li", { key: suggestion }, suggestion)
+            )
+          )
+        )
+      ),
+      React.createElement(
+        "section",
+        { className: "panel chatbot-panel" },
+        React.createElement(
+          "div",
+          { className: "panel-heading" },
+          React.createElement("h2", null, "Health Chatbot"),
+          React.createElement("span", { className: "run-state" }, isLoading ? "Typing" : "Ready")
         ),
         React.createElement(
           "div",
-          { className: "dataset-strip", "aria-label": "Datasets used" },
-          datasets.map((dataset) => React.createElement("span", { key: dataset }, dataset))
+          { className: "chat-window" },
+          messages.map((message, index) =>
+            React.createElement(
+              "div",
+              { className: `chat-message ${message.role}`, key: `${message.role}-${index}` },
+              message.text
+            )
+          )
+        ),
+        React.createElement(
+          "form",
+          { className: "chat-form", onSubmit: sendChat },
+          React.createElement("input", {
+            value: chatInput,
+            placeholder: "Ask about your habits, score, or next goal",
+            onChange: (event) => setChatInput(event.target.value),
+          }),
+          React.createElement("button", { className: "primary-button", type: "submit", disabled: isLoading }, "Send")
         )
       )
     )

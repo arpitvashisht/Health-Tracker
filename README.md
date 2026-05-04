@@ -1,6 +1,14 @@
-# Health-Tracker
+# AI Smart Health Tracker Chatbot using Generative AI
 
-AI smart health tracker project using Fitbit-style activity datasets.
+A web-based AI smart health tracker that analyzes daily habits and responds like a conversational health assistant.
+
+The app lets users enter:
+
+- steps walked
+- sleep hours
+- water intake in liters
+
+It calculates a health score, detects unhealthy habits, generates personalized suggestions, and shows the results in a clean React UI.
 
 ## Dataset files
 
@@ -16,6 +24,36 @@ This repo currently includes hourly and minute-level health tracking CSV files, 
 - `minuteSleep_merged.csv`
 - `minuteStepsNarrow_merged.csv`
 - `weightLogInfo_merged.csv`
+
+## Generative AI chatbot
+
+Run the web app:
+
+```bash
+python src/serve_frontend.py
+```
+
+Then open `http://127.0.0.1:8000`.
+
+The frontend is built with HTML, CSS, and React. It is served from the `frontend/` folder and calls the Python API in `src/serve_frontend.py`.
+
+The chatbot works in two modes:
+
+- OpenAI mode when `OPENAI_API_KEY` is set
+- local fallback mode when no API key is available
+
+Set your OpenAI API key in PowerShell:
+
+```powershell
+$env:OPENAI_API_KEY="your_api_key_here"
+python src/serve_frontend.py
+```
+
+You can optionally choose a model:
+
+```powershell
+$env:OPENAI_MODEL="gpt-5.2"
+```
 
 ## ML model
 
@@ -51,16 +89,6 @@ Run a prediction:
 ```bash
 python src/predict_calories.py --id 1503960366 --steps 500 --total-intensity 20 --average-intensity 0.33 --hour 18 --day-of-week 2
 ```
-
-Run the frontend:
-
-```bash
-python src/serve_frontend.py
-```
-
-Then open `http://127.0.0.1:8000`.
-
-The frontend is built with HTML, CSS, and React. It is served from the `frontend/` folder and calls the Python API in `src/serve_frontend.py`.
 
 The trained model is saved to `models/calorie_predictor.joblib`.
 
